@@ -6,21 +6,39 @@
 <title>Калькулятор ФА</title>
 <style>
 body{font-family:sans-serif;background:#111;color:#eee;margin:10px}
-h2{margin:4px 0}
+h2{margin:4px 0 8px}
+.bar{margin-bottom:8px}
+.bar label{white-space:nowrap}
 table{width:100%;border-collapse:collapse;font-size:14px}
 td,th{border:1px solid #444;padding:5px}
-input{width:100%;background:#222;color:#fff;border:1px solid #555;padding:4px;box-sizing:border-box}
-button{padding:6px 12px;margin:4px 2px;border:none;border-radius:6px;background:#444;color:#fff}
+input{width:100%;background:#222;color:#fff;border:1px solid #555;padding:4px;box-sizing:border-box;font-size:14px}
+button{padding:6px 12px;margin:4px 4px 0 0;border:none;border-radius:6px;background:#444;color:#fff;font-size:14px}
 .del{background:#a33;padding:2px 8px}
 .reset{background:#666;padding:2px 8px}
-#total{font-size:22px;color:#7f7;font-weight:bold;margin:10px 0}
-#total2{font-size:15px;color:#bbb;margin:4px 0}
+.act{white-space:nowrap;text-align:center}
+.act button{display:inline-block;margin:1px 1px}
+#total{font-size:20px;color:#7f7;font-weight:bold;margin:10px 0 4px}
+#total2{font-size:14px;color:#bbb;margin:0 0 8px}
+@media(max-width:600px){
+ h2{font-size:19px}
+ table{font-size:12px}
+ td,th{padding:3px 2px}
+ input{padding:3px 2px;font-size:14px}
+ button{padding:4px 8px;font-size:13px}
+ .del{padding:2px 5px}
+ .reset{padding:2px 5px}
+ #total{font-size:17px}
+ #total2{font-size:12px}
+ .bar input{width:70px}
+}
 </style>
 </head>
 <body>
 <h2>Калькулятор фенилаланина</h2>
-Вес готового блюда, г: <input id="dishW" style="width:90px" type="number">
-Вес порции, г: <input id="portW" style="width:90px" type="number">
+<div class="bar">
+<label>Вес готового блюда, г: <input id="dishW" type="number"></label>
+<label>Вес порции, г: <input id="portW" type="number"></label>
+</div>
 <table id="tbl"><thead><tr>
 <th>Продукт</th><th>ФА, мг/100 г</th><th>Вес, г</th><th>Вес в порции, г</th><th>ФА в порции, мг</th><th></th>
 </tr></thead><tbody></tbody></table>
@@ -41,44 +59,57 @@ function save(){
  try{localStorage.setItem("fa_prod",JSON.stringify(data));
  localStorage.setItem("fa_set",JSON.stringify(settings))}catch(e){}
 }
-function render(){
+function buildTable(){
  var tb=document.querySelector("#tbl tbody");tb.innerHTML="";
  data.forEach(function(p,i){
   var tr=document.createElement("tr");
-  var wp=settings.dish>0?p.w/settings.dish*settings.port:0;
-  var fa=p.fa/100*wp;
   tr.innerHTML="<td><input value=\""+p.n.replace(/"/g,"&quot;")+"\" data-k=\"n\" data-i=\""+i+"\"></td>"+
   "<td><input type=\"number\" step=\"0.1\" value=\""+p.fa+"\" data-k=\"fa\" data-i=\""+i+"\"></td>"+
   "<td><input type=\"number\" value=\""+p.w+"\" data-k=\"w\" data-i=\""+i+"\"></td>"+
-  "<td>"+wp.toFixed(2)+"</td><td>"+fa.toFixed(2)+"</td>"+
-  "<td><button class='reset' onclick='resetRow("+i+")'>↺</button><button class='del' onclick='delRow("+i+")'>✕</button></td>";
+  "<td class=\"cw\"></td><td class=\"cf\"></td>"+
+  "<td class=\"act\"><button class='reset' onclick='resetRow("+i+")'>↺</button><button class='del' onclick='delRow("+i+")'>✕</button></td>";
   tb.appendChild(tr);
  });
- var tw=data.reduce(function(s,p){return s+ (settings.dish>0?p.w/settings.dish*settings.port:0)},0);
- var tf=data.reduce(function(s,p){return s+ p.fa/100*(settings.dish>0?p.w/settings.dish*settings.port:0)},0);
- var twt=data.reduce(function(s,p){return s+p.w},0);
- var faAll=data.reduce(function(s,p){return s+p.fa/100*p.w},0);
- document.getElementById("total").textContent="ФА на 100 г готового продукта: "+tf.toFixed(2)+" мг";
- document.getElementById("total2").textContent="Справочно: сырых ингредиентов "+twt.toFixed(1)+" г · в порции "+tw.toFixed(1)+" г · ФА во всём блюде "+faAll.toFixed(1)+" мг";
  document.getElementById("dishW").value=settings.dish;
  document.getElementById("portW").value=settings.port;
+ recalcAll();
+}
+function recalcRow(i){
+ var tr=document.querySelector("#tbl tbody").children[i];
+ var p=data[i];
+ var wp=settings.dish>0?p.w/settings.dish*settings.port:0;
+ tr.children[3].textContent=wp.toFixed(2);
+ tr.children[4].textContent=(p.fa/100*wp).toFixed(2);
+}
+function recalcAll(){
+ for(var i=0;i<data.length;i++)recalcRow(i);
+ recalcTotal();
+}
+function recalcTotal(){
+ var tw=0,tf=0,twt=0,faAll=0;
+ data.forEach(function(p){
+  var wp=settings.dish>0?p.w/settings.dish*settings.port:0;
+  tw+=wp;twt+=p.w;faAll+=p.fa/100*p.w;tf+=p.fa/100*wp;
+ });
+ document.getElementById("total").textContent="ФА на 100 г готового продукта: "+tf.toFixed(2)+" мг";
+ document.getElementById("total2").textContent="Справочно: сырых ингредиентов "+twt.toFixed(1)+" г · в порции "+tw.toFixed(1)+" г · ФА во всём блюде "+faAll.toFixed(1)+" мг";
 }
 document.addEventListener("input",function(e){
  var t=e.target;
- if(t.id==="dishW"){settings.dish=parseFloat(t.value)||0;save();render();return}
- if(t.id==="portW"){settings.port=parseFloat(t.value)||0;save();render();return}
+ if(t.id==="dishW"){settings.dish=parseFloat(t.value)||0;save();recalcAll();return}
+ if(t.id==="portW"){settings.port=parseFloat(t.value)||0;save();recalcAll();return}
  if(!t.dataset||!t.dataset.k)return;
  var i=+t.dataset.i,k=t.dataset.k;
  if(k==="n")data[i].n=t.value;
  if(k==="fa")data[i].fa=parseFloat(t.value)||0;
  if(k==="w")data[i].w=parseFloat(t.value)||0;
- save();render();
+ save();recalcRow(i);recalcTotal();
 });
-function addRow(){data.push({n:"Новый продукт",fa:0,w:0});save();render()}
-function delRow(i){data.splice(i,1);save();render()}
-function resetRow(i){data[i].w=0;save();render()}
-function resetAll(){data.forEach(function(p){p.w=0});save();render()}
-load();render();
+function addRow(){data.push({n:"Новый продукт",fa:0,w:0});save();buildTable()}
+function delRow(i){data.splice(i,1);save();buildTable()}
+function resetRow(i){data[i].w=0;save();recalcRow(i);recalcTotal()}
+function resetAll(){data.forEach(function(p){p.w=0});save();recalcAll()}
+load();buildTable();
 </script>
 </body>
 </html>
