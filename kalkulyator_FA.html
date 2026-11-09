@@ -18,7 +18,7 @@ button{padding:6px 12px;margin:4px 2px;border:none;border-radius:6px;background:
 </head>
 <body>
 <h2>Калькулятор фенилаланина</h2>
-Вес блюда, г: <input id="dishW" style="width:90px" type="number">
+Вес готового блюда, г: <input id="dishW" style="width:90px" type="number">
 Вес порции, г: <input id="portW" style="width:90px" type="number">
 <table id="tbl"><thead><tr>
 <th>Продукт</th><th>ФА, мг/100 г</th><th>Вес, г</th><th>Вес в порции, г</th><th>ФА в порции, мг</th><th></th>
@@ -33,7 +33,7 @@ function load(){
  try{data=JSON.parse(localStorage.getItem("fa_prod")||"null")||null}catch(e){data=null}
  if(!data)data=DEF.map(function(p){return{n:p[0],fa:p[1],w:0}});
  try{settings=JSON.parse(localStorage.getItem("fa_set")||"null")}catch(e){settings=null}
- if(!settings)settings={dish:640,port:50};
+ if(!settings)settings={dish:640,port:100};
 }
 function save(){
  try{localStorage.setItem("fa_prod",JSON.stringify(data));
@@ -60,13 +60,14 @@ function render(){
  document.getElementById("portW").value=settings.port;
 }
 document.addEventListener("input",function(e){
- var t=e.target;if(!t.dataset||!t.dataset.k)return;
+ var t=e.target;
+ if(t.id==="dishW"){settings.dish=parseFloat(t.value)||0;save();render();return}
+ if(t.id==="portW"){settings.port=parseFloat(t.value)||0;save();render();return}
+ if(!t.dataset||!t.dataset.k)return;
  var i=+t.dataset.i,k=t.dataset.k;
  if(k==="n")data[i].n=t.value;
  if(k==="fa")data[i].fa=parseFloat(t.value)||0;
  if(k==="w")data[i].w=parseFloat(t.value)||0;
- settings.dish=parseFloat(document.getElementById("dishW").value)||0;
- settings.port=parseFloat(document.getElementById("portW").value)||0;
  save();render();
 });
 function addRow(){data.push({n:"Новый продукт",fa:0,w:0});save();render()}
