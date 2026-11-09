@@ -14,6 +14,7 @@ button{padding:6px 12px;margin:4px 2px;border:none;border-radius:6px;background:
 .del{background:#a33;padding:2px 8px}
 .reset{background:#666;padding:2px 8px}
 #total{font-size:22px;color:#7f7;font-weight:bold;margin:10px 0}
+#total2{font-size:15px;color:#bbb;margin:4px 0}
 </style>
 </head>
 <body>
@@ -24,6 +25,7 @@ button{padding:6px 12px;margin:4px 2px;border:none;border-radius:6px;background:
 <th>Продукт</th><th>ФА, мг/100 г</th><th>Вес, г</th><th>Вес в порции, г</th><th>ФА в порции, мг</th><th></th>
 </tr></thead><tbody></tbody></table>
 <div id="total"></div>
+<div id="total2"></div>
 <button onclick="addRow()">Добавить продукт</button>
 <button onclick="resetAll()">Сбросить все веса</button>
 <script>
@@ -55,7 +57,9 @@ function render(){
  var tw=data.reduce(function(s,p){return s+ (settings.dish>0?p.w/settings.dish*settings.port:0)},0);
  var tf=data.reduce(function(s,p){return s+ p.fa/100*(settings.dish>0?p.w/settings.dish*settings.port:0)},0);
  var twt=data.reduce(function(s,p){return s+p.w},0);
- document.getElementById("total").textContent="Итого: вес "+twt.toFixed(1)+" г · в порции "+tw.toFixed(1)+" г · ФА "+tf.toFixed(2)+" мг";
+ var faAll=data.reduce(function(s,p){return s+p.fa/100*p.w},0);
+ document.getElementById("total").textContent="ФА на 100 г готового продукта: "+tf.toFixed(2)+" мг";
+ document.getElementById("total2").textContent="Справочно: сырых ингредиентов "+twt.toFixed(1)+" г · в порции "+tw.toFixed(1)+" г · ФА во всём блюде "+faAll.toFixed(1)+" мг";
  document.getElementById("dishW").value=settings.dish;
  document.getElementById("portW").value=settings.port;
 }
