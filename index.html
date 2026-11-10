@@ -1,309 +1,567 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f4f6f8">
 <title>Калькулятор фенилаланина</title>
 <style>
-  :root { color-scheme: dark; }
-  * { box-sizing: border-box; }
-  body { margin:0; padding:12px; background:#111; color:#eee;
-         font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif; font-size:15px; }
-  h1 { font-size:1.35em; margin:8px 0 10px; }
-  .warn { border:2px solid #e6a23c; background:#2b220f; color:#f0c674;
-          border-radius:10px; padding:10px 12px; margin:10px 0 14px; font-size:13.5px; line-height:1.45; }
-  .warn b { color:#ffd479; }
-  .row2 { display:flex; gap:10px; margin-bottom:10px; }
-  .row2 label { flex:1; display:flex; flex-direction:column; gap:4px; font-size:13px; color:#bbb; }
-  input { background:#1d1d1d; border:1px solid #444; color:#eee; border-radius:8px;
-          padding:8px 10px; font-size:16px; width:100%; }
-  input:focus { outline:1px solid #7a5cff; }
-  .tbl { width:100%; border-collapse:collapse; }
-  .tbl th { font-size:11px; color:#999; font-weight:normal; text-align:center; padding:2px 1px; }
-  .tbl td { padding:3px 1px; }
-  .tbl input { font-size:14px; padding:7px 6px; border-radius:7px; }
-  .c_name { width:30%; }
-  .c_fa   { width:17%; }
-  .c_w    { width:17%; }
-  .c_in   { width:19%; text-align:right; font-size:13px; color:#ccc; padding-right:4px; }
-  .c_out  { width:13%; text-align:right; font-size:13px; color:#6fd66f; padding-right:2px; }
-  .c_out.hi { font-weight:bold; color:#a4f9a4; }
-  .c_del  { width:4%; text-align:center; }
-  .del { background:none; border:none; color:#888; font-size:15px; padding:4px 2px; cursor:pointer; }
-  .poswrap { position:relative; }
-  .ac { position:absolute; top:100%; left:0; right:0; background:#262626; border:1px solid #555;
-        border-radius:8px; z-index:30; max-height:180px; overflow:auto; display:none; }
-  .ac div { padding:8px 10px; font-size:14px; cursor:pointer; border-bottom:1px solid #333; }
-  .ac div:hover { background:#333; }
-  .ac span { color:#8fbf8f; float:right; font-size:12.5px; }
-  .total { color:#6fd66f; font-size:1.15em; font-weight:bold; margin:12px 0 6px; }
-  .per100 { margin:0 0 6px; }
-  .ref { color:#999; font-size:12.5px; margin:2px 0 12px; }
-  .btns { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
-  button.act { background:#2a2a2a; color:#eee; border:1px solid #555; border-radius:9px;
-               padding:10px 14px; font-size:14px; cursor:pointer; }
-  button.act:active { background:#3a3a3a; }
-  .saved { color:#6fd66f; font-size:12.5px; min-height:16px; margin-bottom:14px; }
-  details.help { margin:18px 0 10px; border:1px solid #333; border-radius:10px; padding:10px 12px; }
-  details.help summary { cursor:pointer; font-weight:bold; }
-  details.help li { margin:6px 0; font-size:13.5px; line-height:1.45; }
-  .help .warnline { color:#f0c674; font-size:13.5px; margin-top:8px; }
-  .verbtn { display:block; width:100%; background:#1d1d1d; color:#999; border:1px solid #333;
-            border-radius:9px; padding:9px; font-size:12.5px; margin-top:10px; cursor:pointer; }
-  #banner { display:none; background:#4a3b00; border:1px solid #c9a227; color:#ffe08a;
-            border-radius:10px; padding:10px 12px; margin:0 0 12px; font-size:14px; }
-  #banner button { background:#c9a227; color:#111; border:none; border-radius:8px;
-                   padding:8px 14px; font-size:14px; font-weight:bold; margin-top:6px; cursor:pointer; }
+  :root{
+    --bg:#f4f6f8; --card:#ffffff; --card2:#eceef2; --line:#d9dce2;
+    --text:#1b1d21; --dim:#5f6570; --accent:#2f6fd8; --green:#1e8e3e;
+    --warn-bg:#fff6df; --warn-line:#e0a800; --warn-text:#7a5b00;
+    --danger:#d93025;
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f1115; --card:#1b1e24; --card2:#23262e; --line:#2c3038;
+    --text:#e8eaed; --dim:#9aa0a6; --accent:#8ab4f8; --green:#5dd97c;
+    --warn-bg:#2a2210; --warn-line:#e0a800; --warn-text:#f2c94c;
+    --danger:#e57373;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0f1115; --card:#1b1e24; --card2:#23262e; --line:#2c3038;
+      --text:#e8eaed; --dim:#9aa0a6; --accent:#8ab4f8; --green:#5dd97c;
+      --warn-bg:#2a2210; --warn-line:#e0a800; --warn-text:#f2c94c;
+      --danger:#e57373;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    padding:14px;max-width:640px;margin-left:auto;margin-right:auto;
+    -webkit-text-size-adjust:100%;}
+  h1{font-size:1.5rem;margin:8px 0 14px;display:flex;align-items:center;gap:10px;}
+  h1 .title{flex:1;}
+  .themeBtn{width:42px;height:42px;border-radius:50%;background:var(--card2);
+    border:1px solid var(--line);font-size:1.15rem;cursor:pointer;flex:none;
+    color:var(--text);line-height:1;padding:0;}
+  .warnbox{background:var(--warn-bg);border:2px solid var(--warn-line);
+    border-radius:12px;padding:12px 14px;color:var(--warn-text);
+    font-size:.92rem;line-height:1.45;margin-bottom:16px;}
+  .warnbox b{color:#ffd865;}
+  .fieldrow{display:flex;gap:12px;margin-bottom:16px;}
+  .fieldrow>div{flex:1;}
+  .fieldrow label{display:block;font-size:.85rem;color:var(--dim);margin-bottom:5px;}
+  .fieldrow input{width:100%;padding:12px;background:var(--card);
+    border:1px solid var(--line);border-radius:10px;color:var(--text);
+    font-size:1.05rem;}
+  /* ШАПКА ТАБЛИЦЫ: одна жёсткая сетка со строками */
+  .thead,.trow{display:grid;
+    grid-template-columns:minmax(90px,1.4fr) 56px 62px 78px 78px 26px;
+    gap:6px;align-items:center;}
+  .thead{font-size:.68rem;color:var(--accent);padding:2px 0 6px;
+    border-bottom:1px solid var(--line);margin-bottom:6px;}
+  .trow{padding:5px 0;border-bottom:1px solid var(--line);}
+  .trow input{width:100%;padding:9px 6px;background:var(--card);
+    border:1px solid var(--line);border-radius:9px;color:var(--text);
+    font-size:.98rem;min-width:0;}
+  .trow input::placeholder{color:#5f656d;font-size:.9rem;}
+  .trow .calc{color:var(--dim);font-size:.92rem;text-align:center;white-space:nowrap;}
+  .trow .calc.has{color:var(--text);}
+  .del{background:none;border:none;color:var(--danger);font-size:1.1rem;
+    padding:6px 2px;cursor:pointer;line-height:1;}
+  #addRow{padding:12px;background:var(--card2);
+    border:1px solid var(--line);border-radius:10px;color:var(--text);
+    font-size:1rem;cursor:pointer;}
+  .refsection{margin-top:22px;border-top:1px solid var(--line);padding-top:14px;}
+  .refsection h2{font-size:1rem;color:var(--accent);margin:0 0 10px;font-weight:600;}
+  .refeditor .row input.n{flex:1;}
+  .refeditor .row input.v{width:80px;flex:none;}
+  .btnrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+  .btnrow button{padding:12px;background:var(--card2);border:1px solid var(--line);
+    border-radius:10px;color:var(--text);font-size:.98rem;cursor:pointer;}
+  .btnrow3{grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .btnrow3 button{font-size:.88rem;padding:11px 4px;}
+  .results{margin-top:18px;}
+  .results .big{color:var(--green);font-size:1.15rem;font-weight:700;margin:4px 0;}
+  .results .mid{color:var(--green);font-size:1rem;margin:4px 0;}
+  .results .ref{color:var(--dim);font-size:.85rem;margin:8px 0;line-height:1.4;}
+  dialog{background:var(--card);color:var(--text);border:1px solid var(--line);
+    border-radius:14px;padding:16px;max-width:92vw;width:520px;max-height:80vh;overflow:auto;}
+  dialog::backdrop{background:rgba(0,0,0,.6);}
+  dialog h3{margin:4px 0 8px;font-size:1.05rem;color:var(--accent);}
+  dialog p, dialog li{font-size:.9rem;line-height:1.45;}
+  dialog code{background:var(--bg);padding:1px 5px;border-radius:5px;font-size:.85rem;}
+  .refeditor{margin-top:10px;}
+  .refeditor input{width:100%;padding:8px;background:var(--card);border:1px solid var(--line);
+    border-radius:8px;color:var(--text);font-size:.95rem;margin-bottom:6px;}
+
+  .refeditor .row{display:flex;gap:6px;align-items:center;margin-bottom:5px;}
+  .refeditor .row button{background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem;padding:2px;}
+  #updateBanner{display:none;background:#1e293b;border:1px solid #3b82f6;
+    border-radius:10px;padding:10px 14px;margin-bottom:12px;
+    color:#bfdbfe;font-size:.9rem;align-items:center;justify-content:space-between;gap:10px;}
+  #updateBanner button{background:#3b82f6;color:#fff;border:none;border-radius:8px;
+    padding:8px 14px;font-size:.9rem;cursor:pointer;}
+  .center{text-align:center;}
 </style>
 </head>
 <body>
-<h1>Калькулятор фенилаланина</h1>
 
-<div id="banner">Вышла новая версия калькулятора.<br><button onclick="location.reload(true)">Обновить страницу</button></div>
+<h1><span class="title">Калькулятор фенилаланина</span><button id="themeBtn" title="Светлая или тёмная тема">🌙</button></h1>
 
-<div class="warn"><b>Внимание!</b> Значения ФА во встроенном справочнике — <b>примерные</b>: они зависят
-от сорта, производителя и обработки продукта. Сверяйте их с вашей таблицей и правьте прямо в строке.
-Калькулятор — вспомогательный инструмент и не заменяет рекомендаций врача: за рацион отвечают
-пациент и его семья.</div>
+<div id="updateBanner"><span>Вышла новая версия</span><button onclick="location.reload(true)">Обновить страницу</button></div>
 
-<div class="row2">
-  <label>Вес готового блюда, г<input id="dish" type="number" inputmode="decimal"></label>
-  <label>Вес порции, г<input id="portion" type="number" inputmode="decimal"></label>
+<div class="warnbox"><b>Внимание!</b> Значения ФА во встроенном справочнике <b>примерные</b> — они зависят от сорта, производителя и обработки. Сверяйте их с вашей таблицей ФА и при необходимости правьте прямо в строке. Калькулятор — вспомогательный инструмент: он не заменяет рекомендаций врача. За рацион отвечают пациент и его семья.</div>
+
+<div class="fieldrow">
+  <div><label for="dishWeight">Вес готового блюда, г</label>
+    <input id="dishWeight" type="number" inputmode="decimal" placeholder="например 280"></div>
+  <div><label for="portion">Вес порции, г</label>
+    <input id="portion" type="number" inputmode="decimal" value="100"></div>
 </div>
 
+<div class="thead">
+  <div>Продукт</div><div>ФА</div><div>Вес (сырой)</div><div class="center">Вес в порции</div><div class="center">ФА в порции</div><div></div>
+</div>
 <div id="rows"></div>
 
-<div class="btns"><button class="act" onclick="addRow()">+ Продукт</button></div>
-
-<div class="total" id="tPort"></div>
-<div class="per100" id="t100"></div>
-<div class="ref" id="tRef"></div>
-
-<div class="btns">
-  <button class="act" onclick="resetWeights()">Сбросить все веса</button>
-  <button class="act" onclick="share()">Поделиться</button>
-  <button class="act" onclick="shot()">Скриншот рецепта</button>
+<div class="btnrow btnrow3">
+  <button id="addRow">+ Добавить продукт</button>
+  <button id="resetWeights">Сбросить веса</button>
+  <button id="clearAll">Очистить всё</button>
 </div>
-<div class="saved" id="savedMsg"></div>
 
-<details class="help">
-<summary>Как пользоваться</summary>
-<ol>
-<li>Внесите вес готового блюда и вес порции.</li>
-<li>Начните набирать название продукта — если он есть в справочнике, ФА подставится само.
-Нет в справочнике или знаете точнее — впишите свою цифру: она сохранится за строкой.</li>
-<li>Внесите вес сырого продукта. Итоги посчитаются сами: ФА в порции, на 100 г готового блюда
-и вклад каждого продукта.</li>
-<li>Крестик ✕ удаляет строку, «+ Продукт» добавляет новую.</li>
-<li>«Поделиться» — рецепт текстом в мессенджер, «Скриншот рецепта» — картинка с таблицей.</li>
-<li>Данные сохраняются в браузере: закрыли и открыли — рецепт на месте.</li>
-</ol>
-<div class="warnline">Важно: справочные значения ФА ориентировочные. Уже введённые цифры
-стоит перепроверять по вашей таблице и при необходимости править вручную.</div>
-</details>
+<div class="results">
+  <div class="big" id="resPortion">ФА в порции (100 г): 0,00 мг</div>
+  <div class="mid" id="res100">ФА на 100 г готового продукта: 0,00 мг</div>
+  <div class="ref" id="refLine">Справочно: сырых ингредиентов 0 г · ФА во всём блюде 0 мг</div>
+</div>
 
-<button class="verbtn" onclick="checkVersion(true)">Проверить обновления</button>
+<div class="btnrow">
+  <button id="shareBtn">Поделиться</button>
+  <button id="shotBtn">Скриншот рецепта</button>
+</div>
+<div class="btnrow">
+  <button id="refBtn">Справочник</button>
+  <button id="helpBtn">Как пользоваться</button>
+</div>
+<div class="btnrow">
+  <button id="howBtn">Как это работает</button>
+  <button id="checkBtn">Проверить обновления</button>
+</div>
+
+<datalist id="refList"></datalist>
+
+<dialog id="refDlg">
+  <h3>Справочник ФА (можно править)</h3>
+  <p style="color:var(--dim);font-size:.85rem;">Значения примерные — правьте под вашу таблицу ФА. Изменения сохраняются автоматически.</p>
+  <div id="refEditor" class="refeditor"></div>
+  <div class="btnrow">
+    <button id="refAdd">+ Добавить продукт</button>
+    <button id="refReset">Вернуть стандартные</button>
+  </div>
+  <div class="center"><button onclick="this.closest('dialog').close()">Закрыть</button></div>
+</dialog>
+
+<dialog id="shotDlg">
+  <h3>Скриншот рецепта</h3>
+  <img id="shotImg" alt="Предпросмотр карточки" style="width:100%;border-radius:10px;border:1px solid var(--line);">
+  <div class="btnrow">
+    <button id="shotSend">Отправить</button>
+    <button id="shotSave">Скачать PNG</button>
+  </div>
+  <div class="center"><button onclick="this.closest('dialog').close()">Закрыть</button></div>
+</dialog>
+
+<dialog id="helpDlg">
+  <h3>Как пользоваться</h3>
+  <ol>
+    <li>Укажите <b>вес готового блюда</b> (после варки/жарки) и <b>вес порции</b>, которую ест ребёнок.</li>
+    <li>В строках таблицы введите <b>название продукта</b>, <b>ФА в мг на 100 г</b> и <b>сырой вес</b> продукта в блюде. Значения ФА можно взять из справочника — начните печатать название, и оно подставится само (данные справочника примерные, всегда правьте по своей таблице).</li>
+    <li>Калькулятор сразу покажет ФА в порции и на 100 г готового блюда.</li>
+    <li>Данные сохраняются автоматически.</li>
+  </ol>
+  <h3>Ярлык на рабочий стол</h3>
+  <p><b>Android (Chrome):</b> меню «⋮» → «Добавить на главный экран» (или «Установить приложение»). <b>iPhone (Safari):</b> кнопка «Поделиться» → «На экран „Домой“». После этого калькулятор открывается с иконки, как обычное приложение.</p>
+  <h3>Где хранятся данные</h3>
+  <p>Всё, что вы вводите, сохраняется только в памяти вашего браузера (localStorage) и никуда не отправляется. Данные переживают закрытие страницы и перезагрузку телефона, но <b>теряются</b>, если:</p>
+  <ul>
+    <li>очистить кэш и данные сайта в настройках браузера;</li>
+    <li>пользоваться режимом «инкогнито» (там ничего не сохраняется);</li>
+    <li>удалить браузер или «почистить» телефон программами-оптимизаторами;</li>
+    <li>открыть сайт в другом браузере или на другом устройстве — там будет свой пустой список.</li>
+  </ul>
+  <p>Важные рецепты дублируйте кнопками «Поделиться» или «Скриншот рецепта» — в заметки, чат или на почту.</p>
+  <div class="center"><button onclick="this.closest('dialog').close()">Закрыть</button></div>
+</dialog>
+
+<dialog id="howDlg">
+  <h3>Как это работает</h3>
+  <p>Расчёт идёт в несколько шагов, и каждый можно проверить на калькуляторе телефона или на бумажке.</p>
+  <p><b>1. ФА продукта во всём блюде:</b><br><code>ФА на 100 г × вес продукта ÷ 100</code></p>
+  <p><b>2. ФА всего блюда:</b> сумма по всем продуктам.</p>
+  <p><b>3. ФА на 100 г готового блюда:</b><br><code>ФА блюда ÷ вес готового блюда × 100</code></p>
+  <p><b>4. ФА в порции:</b><br><code>ФА на 100 г × вес порции ÷ 100</code></p>
+  <p><b>5. Вес продукта в порции</b> (справочно):<br><code>вес продукта × вес порции ÷ вес блюда</code></p>
+  <p><b>Пример на кабачке.</b> Берём 300 г кабачка, ФА — 20 мг на 100 г. ФА во всём блюде: 20 × 300 ÷ 100 = <b>60 мг</b>. После варки блюдо уварилось до 280 г — вода испарилась, а ФА остался. На 100 г готового: 60 ÷ 280 × 100 ≈ <b>21,4 мг</b>. Порция 100 г → в порции те же <b>21,4 мг</b>. Проверка вторым путём: кабачка в порции 300 × 100 ÷ 280 ≈ 107 г, и 107 × 20 ÷ 100 ≈ 21,4 мг — цифры сходятся.</p>
+  <div class="center"><button onclick="this.closest('dialog').close()">Закрыть</button></div>
+</dialog>
+
+<dialog id="shareDlg">
+  <h3>Поделиться</h3>
+  <p id="shareText" style="white-space:pre-wrap;font-size:.88rem;"></p>
+  <p style="color:var(--warn-text);font-size:.82rem;">Значения ФА в справочнике примерные — перед отправкой сверьте с вашей таблицей ФА.</p>
+  <div class="btnrow">
+    <button id="shareCopy">Скопировать</button>
+    <button id="shareSend">Отправить</button>
+    <button id="shareClose">Закрыть</button>
+  </div>
+</dialog>
 
 <script>
-// ---- справочник ФА (мг/100 г), значения примерные ----
-var DICT = {
- "перец болгарский":63, "перец":63, "помидор":26.3, "томат":26.3,
- "морковь":62.5, "лук репчатый":40, "лук":40, "картофель":75, "картошка":75,
- "кабачок":20, "огурец":14, "тыква":20, "баклажан":30,
- "капуста белокочанная":60, "капуста цветная":60, "капуста":60,
- "свёкла":50, "свекла":50, "редис":15, "салат":15, "зелень":35,
- "яблоко":11, "груша":12, "арбуз":15, "дыня":20, "слива":20, "виноград":25,
- "лимон":20, "апельсин":30, "мандарин":30, "персик":30, "клюква":20,
- "смородина":25, "малина":25, "банан":45,
- "масло растительное":0, "масло":0, "сахар":0, "соль":0
-};
-var DICT_KEYS = Object.keys(DICT).sort(function(a,b){ return b.length-a.length; });
+(function(){
+  // Справочник для ФКУ: только низкобелковые и молочные продукты, без мяса, птицы, творога и яиц
+  var DEFAULT_REF = [
+    {n:"Апельсин",v:24},{n:"Арбуз",v:2},{n:"Банан",v:6},{n:"Батон",v:42},
+    {n:"Брокколи",v:87},{n:"Гречка",v:87},{n:"Груша",v:2},{n:"Кабачок",v:20},
+    {n:"Капуста",v:41},{n:"Картофель",v:75},{n:"Кефир",v:46},{n:"Лук репчатый",v:8},
+    {n:"Макароны",v:53},{n:"Мёд",v:5},{n:"Молоко",v:144},{n:"Морковь",v:63},
+    {n:"Огурец",v:9},{n:"Перец сладкий",v:32},{n:"Помидор",v:6},{n:"Пшено",v:107},
+    {n:"Рис",v:80},{n:"Свёкла",v:17},{n:"Сливки",v:110},{n:"Сметана",v:73},
+    {n:"Слива",v:2},{n:"Тыква",v:28},{n:"Хлеб ржаной",v:45},{n:"Яблоко",v:3}
+  ];
+  var REF_KEY="fa_ref_v3", ROWS_KEY="fa_rows_v3", MISC_KEY="fa_misc_v3";
+  var ref=loadRef(), rows=[];
 
-var state = load();
-function load(){ try{ return JSON.parse(localStorage.getItem('pku_calc_v1')) || empty(); }catch(e){ return empty(); } }
-function empty(){ return {dish:"", portion:"", rows:[{n:"",fa:"",w:""}]}; }
-function save(){ localStorage.setItem('pku_calc_v1', JSON.stringify(state)); }
-
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function num(v){ var x = parseFloat(String(v).replace(',','.')); return isFinite(x)?x:null; }
-
-function render(){
-  var h = '<table class="tbl"><tr><th class="c_name">Продукт</th><th class="c_fa">ФА,<br>мг/100 г</th><th class="c_w">Вес,<br>г</th><th class="c_in">В порции,<br>г</th><th class="c_out">ФА в<br>порции</th><th class="c_del"></th></tr>';
-  var dish = num(state.dish)||0, port = num(state.portion)||0;
-  var share = (dish>0 && port>0 && port<=dish) ? port/dish : 0;
-  var perPort = [];
-  for (var i=0;i<state.rows.length;i++){
-    var r = state.rows[i];
-    var wIn = share * (num(r.w)||0);
-    var faP = wIn * (num(r.fa)||0) / 100;
-    perPort.push(faP);
+  function loadRef(){
+    try{ var s=JSON.parse(localStorage.getItem(REF_KEY)); if(Array.isArray(s)&&s.length){return s;} }catch(e){}
+    return DEFAULT_REF.map(function(p){return {n:p.n,v:p.v};});
   }
-  var mx = Math.max.apply(null, perPort);
-  for (var i=0;i<state.rows.length;i++){
-    var r = state.rows[i];
-    var wIn = perPort[i]/((num(r.fa)||0)/100||1);
-    if (!(num(r.fa)>0)) wIn = share*(num(r.w)||0);
-    var hi = (mx>0 && perPort[i]===mx && num(r.fa)>0) ? ' hi':'';
-    h += '<tr>'
-      + '<td class="c_name poswrap"><input data-i="'+i+'" data-k="n" value="'+esc(r.n)+'" autocomplete="off" placeholder="Продукт"><div class="ac" id="ac'+i+'"></div></td>'
-      + '<td class="c_fa"><input data-i="'+i+'" data-k="fa" value="'+esc(r.fa)+'" inputmode="decimal"></td>'
-      + '<td class="c_w"><input data-i="'+i+'" data-k="w" value="'+esc(r.w)+'" inputmode="decimal"></td>'
-      + '<td class="c_in">'+(wIn? wIn.toFixed(1).replace('.',','):'')+'</td>'
-      + '<td class="c_out'+hi+'">'+(perPort[i]>0? perPort[i].toFixed(2).replace('.',','):'—')+'</td>'
-      + '<td class="c_del"><button class="del" onclick="delRow('+i+')">✕</button></td>'
-      + '</tr>';
-  }
-  h += '</table>';
-  document.getElementById('rows').innerHTML = h;
+  function saveRef(){ localStorage.setItem(REF_KEY, JSON.stringify(ref)); }
 
-  var tot = 0;
-  for (var i=0;i<perPort.length;i++) tot += perPort[i];
-  var totalRaw = 0;
-  for (var i=0;i<state.rows.length;i++) totalRaw += (num(state.rows[i].w)||0);
-  var per100 = (dish>0)? tot*100/dish : 0;
-  document.getElementById('tPort').textContent = 'ФА в порции ('+port+' г): '+tot.toFixed(2).replace('.',',')+' мг';
-  document.getElementById('t100').textContent = 'ФА на 100 г готового продукта: '+per100.toFixed(2).replace('.',',')+' мг';
-  document.getElementById('tRef').textContent = 'Справочно: сырых ингредиентов '+totalRaw.toFixed(1).replace('.',',')+' г · в порции '+(share*dish>0?(share*100).toFixed(1):'0.0').replace('.',',')+' г · ФА во всём блюде '+(tot*100).toFixed(1).replace('.',',')+' мг';
-  bindInputs();
-  save();
-}
-
-function bindInputs(){
-  var els = document.querySelectorAll('#rows input');
-  for (var i=0;i<els.length;i++){
-    (function(el){
-      el.oninput = function(){
-        var i = +el.dataset.i, k = el.dataset.k;
-        var r = state.rows[i];
-        if (k==='n'){
-          r.n = el.value;
-          if (!(num(r.fa)>0) || r.manual!==true){ suggest(i, el.value, el); }
-          renderSoft();
-        } else if (k==='fa'){
-          r.fa = el.value; r.manual = true; closeAll(); renderSoft();
-        } else {
-          r.w = el.value; renderSoft();
-        }
-      };
-    })(els[i]);
+  function loadRows(){
+    try{ var s=JSON.parse(localStorage.getItem(ROWS_KEY)); if(Array.isArray(s)) return s; }catch(e){}
+    return null;
   }
-}
-// перерисовка без потери фокуса
-function renderSoft(){
-  var dish = num(state.dish)||0, port = num(state.portion)||0;
-  var share = (dish>0 && port>0 && port<=dish) ? port/dish : 0;
-  var tot = 0, perPort = [], totalRaw = 0;
-  for (var i=0;i<state.rows.length;i++){
-    var r = state.rows[i]; var w = num(r.w)||0; totalRaw += w;
-    var fa = num(r.fa)||0;
-    perPort.push(share*w*fa/100); tot += perPort[i];
+  function saveRows(){
+    localStorage.setItem(ROWS_KEY, JSON.stringify(rows.map(function(r){
+      return {n:r.n||"", f:r.f||"", w:r.w||""};
+    })));
   }
-  var mx = Math.max.apply(null, perPort);
-  var tbl = document.querySelector('.tbl');
-  if (!tbl) { render(); return; }
-  var rows = tbl.querySelectorAll('tr');
-  for (var i=1;i<rows.length;i++){
-    var cells = rows[i].querySelectorAll('td');
-    var wIn = share*(num(state.rows[i-1].w)||0);
-    cells[3].textContent = wIn? wIn.toFixed(1).replace('.',',') : '';
-    cells[4].textContent = perPort[i-1]>0? perPort[i-1].toFixed(2).replace('.',',') : '—';
-    cells[4].className = 'c_out' + ((mx>0 && perPort[i-1]===mx && num(state.rows[i-1].fa)>0)?' hi':'');
+
+  // При первом открытии чистим мусорные «undefined»-строки от старых версий
+  var saved = loadRows();
+  if(saved===null){ rows=[{n:"",f:"",w:""},{n:"",f:"",w:""},{n:"",f:"",w:""}]; }
+  else{
+    rows = saved.filter(function(r){ return r && typeof r==="object" && r.n!=="undefined"; });
+    rows = rows.map(function(r){ return {n:String(r.n||""), f:String(r.f||""), w:String(r.w||"")}; });
+    if(!rows.length) rows=[{n:"",f:"",w:""},{n:"",f:"",w:""},{n:"",f:"",w:""}];
   }
-  var per100 = (dish>0)? tot*100/dish : 0;
-  document.getElementById('tPort').textContent = 'ФА в порции ('+port+' г): '+tot.toFixed(2).replace('.',',')+' мг';
-  document.getElementById('t100').textContent = 'ФА на 100 г готового продукта: '+per100.toFixed(2).replace('.',',')+' мг';
-  document.getElementById('tRef').textContent = 'Справочно: сырых ингредиентов '+totalRaw.toFixed(1).replace('.',',')+' г · в порции '+(dish>0?(share*100).toFixed(1):'0.0').replace('.',',')+' г · ФА во всём блюде '+(tot*100).toFixed(1).replace('.',',')+' мг';
-  save();
-}
 
-function suggest(i, q, el){
-  var box = document.getElementById('ac'+i);
-  q = (q||'').toLowerCase().trim();
-  if (q.length < 2){ box.style.display='none'; return; }
-  var hits = [];
-  for (var j=0;j<DICT_KEYS.length;j++){
-    var k = DICT_KEYS[j];
-    if (k !== q && k.indexOf(q)===0) hits.push(k);
-    if (hits.length>=6) break;
+  var rowsEl=document.getElementById("rows");
+  var dishEl=document.getElementById("dishWeight");
+  var portionEl=document.getElementById("portion");
+  var RES={portion:document.getElementById("resPortion"),
+           h100:document.getElementById("res100"),
+           ref:document.getElementById("refLine")};
+  function num(el){ var x=parseFloat(String(el).replace(",",".")); return isFinite(x)?x:0; }
+
+  function findRef(name){
+    name=String(name||"").trim().toLowerCase();
+    if(name.length<2) return null;
+    var best=null;
+    for(var i=0;i<ref.length;i++){
+      var n=ref[i].n.toLowerCase();
+      if(n===name && num(ref[i].v)>0) return ref[i];
+      if(!best && n.indexOf(name)===0 && num(ref[i].v)>0) best=ref[i];
+    }
+    return best;
   }
-  if (!hits.length){ box.style.display='none'; return; }
-  box.innerHTML = hits.map(function(k){ return '<div data-k="'+esc(k)+'">'+esc(k)+'<span>'+DICT[k]+'</span></div>'; }).join('');
-  box.style.display='block';
-  var items = box.querySelectorAll('div');
-  for (var j=0;j<items.length;j++){
-    items[j].onclick = function(){ state.rows[i].n = this.dataset.k; state.rows[i].fa = DICT[this.dataset.k]; state.rows[i].manual = false; box.style.display='none'; render(); };
+
+  function makeRow(r, idx){
+    var d=document.createElement("div"); d.className="trow"; d.dataset.i=idx;
+    d.innerHTML=
+      '<input class="np" placeholder="Продукт" list="refList" value="">'+
+      '<input class="fa" inputmode="decimal" placeholder="0">'+
+      '<input class="wt" inputmode="decimal" placeholder="0">'+
+      '<div class="calc c1">—</div>'+
+      '<div class="calc c2">—</div>'+
+      '<button class="del" title="Удалить">✕</button>';
+    var np=d.querySelector(".np"), fa=d.querySelector(".fa"), wt=d.querySelector(".wt");
+    np.value=r.n; fa.value=r.f; wt.value=r.w;
+    // Ввод: обновляем модель и ТОЛЬКО расчётные ячейки — таблицу не пересоздаём, курсор не слетает
+    np.addEventListener("input",function(){ r.n=np.value; saveRows(); });
+    fa.addEventListener("input",function(){ r.f=fa.value; saveRows(); updCalcRow(d,r); recompute(); });
+    wt.addEventListener("input",function(){ r.w=wt.value; saveRows(); updCalcRow(d,r); recompute(); });
+    np.addEventListener("change",function(){
+      var m=findRef(np.value);
+      if(m){ r.f=String(m.v); fa.value=r.f; saveRows(); updCalcRow(d,r); recompute(); }
+    });
+    d.querySelector(".del").addEventListener("click",function(){
+      rows.splice(idx,1); if(!rows.length) rows=[{n:"",f:"",w:""},{n:"",f:"",w:""},{n:"",f:"",w:""}];
+      saveRows(); renderAll();
+    });
+    updCalcRow(d,r);
+    return d;
   }
-}
-function closeAll(){ var a = document.querySelectorAll('.ac'); for (var i=0;i<a.length;i++) a[i].style.display='none'; }
-document.addEventListener('click', function(e){ if(!e.target.closest('.poswrap')) closeAll(); });
 
-function addRow(){ state.rows.push({n:"",fa:"",w:""}); render(); }
-function delRow(i){ state.rows.splice(i,1); if(!state.rows.length) state.rows=[{n:"",fa:"",w:""}]; render(); }
-function resetWeights(){ if(!confirm('Обнулить все веса продуктов?')) return;
-  for (var i=0;i<state.rows.length;i++) state.rows[i].w=''; render(); }
-
-function dishPortion(){ return {dish: num(state.dish)||0, port: num(state.portion)||0}; }
-function recipeLines(){
-  var dp = dishPortion(); var tot=0, lines=[];
-  var share = (dp.dish>0 && dp.port>0 && dp.port<=dp.dish)? dp.port/dp.dish : 0;
-  for (var i=0;i<state.rows.length;i++){
-    var r = state.rows[i]; var w=num(r.w)||0, fa=num(r.fa)||0;
-    var wIn = share*w, faP = wIn*fa/100; tot += faP;
-    if (r.n || w) lines.push(r.n+' — ФА '+fa+' · вес '+w+' г · в порции '+wIn.toFixed(1).replace('.',',')+' г · ФА '+faP.toFixed(2).replace('.',',')+' мг');
+  function updCalcRow(d,r){
+    var f=num(r.f), w=num(r.w);
+    var c1=d.querySelector(".c1"), c2=d.querySelector(".c2");
+    var dw=num(dishEl.value), pw=num(portionEl.value);
+    if(f>0&&w>0&&dw>0){
+      var wp=w*pw/dw, fa=f*w/100*pw/dw;
+      c1.textContent=fmt(wp); c1.classList.add("has");
+      c2.textContent=fmt(fa); c2.classList.add("has");
+    } else { c1.textContent="—"; c1.classList.remove("has"); c2.textContent="—"; c2.classList.remove("has"); }
   }
-  var per100 = (dp.dish>0)? tot*100/dp.dish : 0;
-  return ['Калькулятор фенилаланина','Блюдо: '+dp.dish+' г · Порция: '+dp.port+' г','','Продукт | ФА мг/100 г | Вес, г | В порции, г | ФА в порции, мг'].concat(lines).concat(['','ФА в порции: '+tot.toFixed(2).replace('.',',')+' мг','ФА на 100 г готового продукта: '+per100.toFixed(2).replace('.',',')+' мг','Значения ФА справочные — сверяйте с вашей таблицей']);
-}
-function share(){
-  if (navigator.share){ navigator.share({text: recipeLines().join('\n')}).catch(function(){}); }
-  else { navigator.clipboard.writeText(recipeLines().join('\n')); msg('Скопировано в буфер обмена'); }
-}
-function shot(){
-  var w = window.open('','_blank');
-  if(!w){ msg('Разрешите всплывающие окна'); return; }
-  var dp = dishPortion();
-  var share = (dp.dish>0 && dp.port>0 && dp.port<=dp.dish)? dp.port/dp.dish : 0;
-  var tot = 0, tr = '';
-  for (var i=0;i<state.rows.length;i++){
-    var r = state.rows[i], w=num(r.w)||0, fa=num(r.fa)||0;
-    var wIn = share*w, faP = wIn*fa/100; tot += faP;
-    tr += '<tr><td>'+esc(r.n)+'</td><td style="text-align:right">'+fa+'</td><td style="text-align:right">'+w+'</td><td style="text-align:right">'+(wIn?wIn.toFixed(1):'')+'</td><td style="text-align:right">'+(faP>0?faP.toFixed(2):'—')+'</td></tr>';
+
+  function fmt(x){
+    if(!isFinite(x)) return "—";
+    return x.toLocaleString("ru-RU",{minimumFractionDigits:0,maximumFractionDigits:2});
   }
-  var per100 = (dp.dish>0)? tot*100/dp.dish : 0;
-  var d = new Date();
-  w.document.write('<html><head><meta charset="utf-8"><title>Рецепт</title><style>body{font-family:Arial,sans-serif;background:#111;color:#eee;padding:24px;max-width:760px}h1{font-size:24px}table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:6px 4px;border-bottom:1px solid #333}th{text-align:left;color:#999;font-weight:normal}td:first-child{text-align:left}td:not(:first-child){text-align:right}.tot{color:#6fd66f;font-size:19px;font-weight:bold;margin:14px 0 6px}.note{color:#f0c674;font-size:12px;margin-top:14px}</style></head><body>'+
-  '<h1>Калькулятор фенилаланина</h1><div style="color:#999">'+d.toLocaleDateString('ru-RU')+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+'</div>'+
-  '<p>Блюдо: '+dp.dish+' г &nbsp; Порция: '+dp.port+' г</p>'+
-  '<table><tr><th>Продукт</th><th>ФА, мг/100 г</th><th>Вес, г</th><th>В порции, г</th><th>ФА в порции, мг</th></tr>'+tr+'</table>'+
-  '<div class="tot">ФА в порции: '+tot.toFixed(2).replace('.',',')+' мг</div>'+
-  '<div>ФА на 100 г готового продукта: '+per100.toFixed(2).replace('.',',')+' мг</div>'+
-  '<div class="note">Значения ФА справочные — сверяйте с вашей таблицей.</div>'+
-  '</body></html>');
-  w.document.close();
-}
-function msg(t){ var m=document.getElementById('savedMsg'); m.textContent=t; setTimeout(function(){m.textContent='';},2500); }
 
-['dish','portion'].forEach(function(id){
-  var el = document.getElementById(id);
-  el.value = state[id];
-  el.oninput = function(){ state[id] = el.value; renderSoft(); };
-});
+  function recompute(){
+    var dw=num(dishEl.value), pw=num(portionEl.value);
+    var totalFa=0,totalW=0;
+    rows.forEach(function(r){ var f=num(r.f),w=num(r.w); totalFa+=f*w/100; totalW+=w; });
+    var fa100 = dw>0 ? totalFa/dw*100 : 0;
+    var faPortion = pw>0 ? fa100*pw/100 : 0;
+    RES.portion.textContent="ФА в порции ("+fmt(pw)+" г): "+faPortion.toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2})+" мг";
+    RES.h100.textContent="ФА на 100 г готового продукта: "+fa100.toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2})+" мг";
+    RES.ref.textContent="Справочно: сырых ингредиентов "+fmt(totalW)+" г · ФА во всём блюде "+fmt(totalFa)+" мг";
+  }
 
-// ---- проверка версии ----
-var MY_VER = 9;
-function checkVersion(loud){
-  fetch(location.pathname + '?check=' + Date.now(), {cache:'no-store'})
-    .then(function(r){ return r.text(); })
-    .then(function(t){
-      var m = t.match(/MY_VER\s*=\s*(\d+)/);
-      var srv = m ? +m[1] : MY_VER;
-      if (srv > MY_VER){ document.getElementById('banner').style.display='block'; }
-      else if (loud){ msg('У вас последняя версия'); }
-    }).catch(function(){ if(loud) msg('Не удалось проверить обновления'); });
-}
-setTimeout(function(){ checkVersion(false); }, 800);
+  function renderAll(){
+    rowsEl.innerHTML="";
+    rows.forEach(function(r,i){ rowsEl.appendChild(makeRow(r,i)); });
+    recompute();
+  }
 
-render();
+  //dishEl.addEventListener("input", function(){ renderAll(); }); — пересборка таблицы рвёт фокус
+  dishEl.addEventListener("input", function(){ saveMisc(); document.querySelectorAll(".trow").forEach(function(d,i){ updCalcRow(d,rows[i]); }); recompute(); });
+  portionEl.addEventListener("input", function(){ saveMisc(); document.querySelectorAll(".trow").forEach(function(d,i){ updCalcRow(d,rows[i]); }); recompute(); });
+
+  document.getElementById("addRow").addEventListener("click",function(){
+    rows.push({n:"",f:"",w:""}); saveRows(); renderAll();
+    var all=rowsEl.querySelectorAll(".trow .np");
+    if(all.length) all[all.length-1].focus();
+  });
+  document.getElementById("resetWeights").addEventListener("click",function(){
+    rows.forEach(function(r){ r.w=""; }); saveRows(); renderAll();
+  });
+  document.getElementById("clearAll").addEventListener("click",function(){
+    rows=[{n:"",f:"",w:""},{n:"",f:"",w:""},{n:"",f:"",w:""}];
+    dishEl.value=""; saveRows(); saveMisc(); renderAll();
+  });
+
+  // Справочник
+  var refEditor=document.getElementById("refEditor");
+  function renderRefEditor(){
+    refEditor.innerHTML="";
+    ref.forEach(function(p,i){
+      var row=document.createElement("div"); row.className="row";
+      row.innerHTML='<input class="n" value=""><input class="v" inputmode="decimal" value=""><button title="Удалить">✕</button>';
+      row.querySelector(".n").value=p.n; row.querySelector(".v").value=p.v;
+      row.querySelector(".n").addEventListener("input",function(){ p.n=this.value; saveRef(); updateDatalist(); });
+      row.querySelector(".v").addEventListener("input",function(){ p.v=this.value; saveRef(); });
+      row.querySelector("button").addEventListener("click",function(){ ref.splice(i,1); saveRef(); renderRefEditor(); });
+      refEditor.appendChild(row);
+    });
+    updateDatalist();
+  }
+  var refList=document.getElementById("refList");
+  function updateDatalist(){
+    refList.innerHTML="";
+    ref.forEach(function(p){ if(num(p.v)>0){ var o=document.createElement("option"); o.value=p.n; refList.appendChild(o); } });
+  }
+  document.getElementById("refAdd").addEventListener("click",function(){ ref.push({n:"",v:0}); saveRef(); renderRefEditor(); });
+  document.getElementById("refReset").addEventListener("click",function(){ ref=DEFAULT_REF.map(function(p){return {n:p.n,v:p.v};}); saveRef(); renderRefEditor(); });
+
+  // Поделиться
+  var shareDlg=document.getElementById("shareDlg"), shareText=document.getElementById("shareText");
+  function buildShare(){
+    var dw=num(dishEl.value), pw=num(portionEl.value);
+    var s="Рецепт: калькулятор ФА\n";
+    s+="Вес готового блюда: "+(dw||"—")+" г\nВес порции: "+(pw||"—")+" г\n";
+    rows.forEach(function(r){ if(num(r.w)>0||r.n.trim()) s+="- "+(r.n||"—")+" | ФА "+(r.f||"—")+" мг/100 г | вес "+(r.w||"—")+" г\n"; });
+    s+=RES.portion.textContent+"\n"+RES.h100.textContent+"\n";
+    s+="(Значения ФА примерные — сверяйте с таблицей ФА)";
+    return s;
+  }
+  document.getElementById("shareBtn").addEventListener("click",function(){
+    shareText.textContent=buildShare(); shareDlg.showModal();
+  });
+  function copyTextFallback(t){
+    var ta=document.createElement("textarea");
+    ta.value=t; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try{ document.execCommand("copy"); }catch(e){}
+    document.body.removeChild(ta);
+  }
+  document.getElementById("shareCopy").addEventListener("click",function(){
+    var txt=buildShare();
+    try{
+      navigator.clipboard.writeText(txt).then(function(){ alert("Скопировано"); },function(){ copyTextFallback(txt); alert("Скопировано"); });
+    }catch(e){ copyTextFallback(txt); alert("Скопировано"); }
+  });
+  document.getElementById("shareSend").addEventListener("click",function(){
+    if(navigator.share) navigator.share({text:buildShare()}).catch(function(){});
+    else{ copyTextFallback(buildShare()); alert("Скопировано — вставьте в чат"); }
+  });
+  document.getElementById("shareClose").addEventListener("click",function(){ shareDlg.close(); });
+  shareDlg.addEventListener("click",function(e){ if(e.target===shareDlg) shareDlg.close(); });
+
+  // Скриншот рецепта: рисуем красивую карточку в PNG, цвета — из текущей темы
+  function themeCol(v,f){ var s=getComputedStyle(document.documentElement).getPropertyValue(v).trim(); return s||f; }
+  function fmt2(x){ return x.toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function rr(g,x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); g.fill(); }
+  function buildShot(){
+    var dw=num(dishEl.value), pw=num(portionEl.value);
+    var items=rows.filter(function(r){ return (r.n&&r.n.trim())||num(r.w)>0; });
+    var C={bg:themeCol("--bg","#0f1115"), card:themeCol("--card","#1b1e24"),
+           card2:themeCol("--card2","#23262e"), line:themeCol("--line","#2c3038"),
+           text:themeCol("--text","#e8eaed"), dim:themeCol("--dim","#9aa0a6"),
+           accent:themeCol("--accent","#8ab4f8"), green:themeCol("--green","#5dd97c")};
+    var W=640, pad=28, headH=104, chipsH=64, tblH=44, rowH=64, tailH=232;
+    var H=pad+headH+(items.length?chipsH:24)+tblH+Math.max(items.length,1)*rowH+tailH;
+    var c=document.createElement("canvas"); c.width=W*2; c.height=H*2;
+    var g=c.getContext("2d"); g.scale(2,2);
+    g.fillStyle=C.bg; g.fillRect(0,0,W,H);
+    g.fillStyle=C.text; g.font="bold 27px sans-serif";
+    g.fillText("Калькулятор фенилаланина",pad,pad+26);
+    g.fillStyle=C.dim; g.font="15px sans-serif";
+    var d=new Date();
+    g.fillText(d.toLocaleDateString("ru-RU",{day:"2-digit",month:"long",year:"numeric"})+", "+d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"}),pad,pad+52);
+    g.fillStyle=C.accent; g.fillRect(pad,pad+68,W-2*pad,4);
+    var y=pad+headH;
+    function chip(x,label,val){
+      g.font="bold 17px sans-serif";
+      var w1=g.measureText(label).width;
+      g.font="16px sans-serif";
+      var w2=g.measureText(val).width;
+      var w=w1+8+w2+28;
+      g.fillStyle=C.card2; rr(g,x,y,w,40,12);
+      g.fillStyle=C.dim; g.font="bold 17px sans-serif"; g.fillText(label,x+14,y+26);
+      g.fillStyle=C.text; g.font="16px sans-serif"; g.fillText(val,x+14+w1+8,y+26);
+      return w;
+    }
+    if(items.length){
+      var x=pad;
+      x+=chip(x,"Блюдо: ",(dw?fmt(dw)+" г":"—"))+10;
+      chip(x,"Порция: ",(pw?fmt(pw)+" г":"—"));
+      y+=chipsH;
+    } else { y+=24; }
+    var col2=W-330, col3=W-218, col4=W-118;
+    g.fillStyle=C.dim; g.font="bold 13px sans-serif";
+    g.fillText("ПРОДУКТ",pad,y+14);
+    g.fillText("ФА",col2,y+14);
+    g.fillText("ВЕС",col3,y+14);
+    g.fillText("ФА В ПОРЦИИ",col4,y+14);
+    y+=tblH;
+    if(!items.length){
+      g.fillStyle=C.card2; rr(g,pad,y,W-2*pad,rowH-10,12);
+      g.fillStyle=C.dim; g.font="16px sans-serif";
+      g.fillText("Список продуктов пуст",pad+16,y+26);
+      y+=rowH;
+    }
+    items.forEach(function(r){
+      var f=num(r.f), w=num(r.w);
+      g.fillStyle=C.card2; rr(g,pad,y,W-2*pad,rowH-10,12);
+      g.fillStyle=C.text; g.font="17px sans-serif";
+      g.fillText(r.n||"—",pad+14,y+24,(col2-14)-(pad+14));
+      g.fillText(f?fmt(f):"—",col2,y+24);
+      g.fillText(w?fmt(w)+" г":"—",col3,y+24);
+      var fp=(f>0&&w>0&&dw>0)? f*w/100*pw/dw : 0;
+      g.fillStyle=C.green; g.font="bold 17px sans-serif";
+      g.fillText(fp>0?fmt2(fp):"—",col4,y+24);
+      y+=rowH;
+    });
+    var totalFa=0,totalW=0;
+    rows.forEach(function(r){ var f=num(r.f),w=num(r.w); totalFa+=f*w/100; totalW+=w; });
+    var fa100 = dw>0 ? totalFa/dw*100 : 0;
+    var faPortion = pw>0 ? fa100*pw/100 : 0;
+    g.fillStyle=C.line; g.fillRect(pad,y,W-2*pad,2); y+=26;
+    g.fillStyle=C.green; g.font="bold 30px sans-serif";
+    g.fillText("ФА в порции: "+fmt2(faPortion)+" мг",pad,y+26); y+=50;
+    g.fillStyle=C.green; g.font="19px sans-serif";
+    g.fillText("На 100 г готового блюда: "+fmt2(fa100)+" мг",pad,y+14); y+=46;
+    g.fillStyle=C.dim; g.font="15px sans-serif";
+    g.fillText("Справочно: сырых ингредиентов "+fmt(totalW)+" г · ФА во всём блюде "+fmt(totalFa)+" мг",pad,y+6); y+=38;
+    g.fillStyle=C.line; g.fillRect(pad,y,W-2*pad,1); y+=18;
+    g.fillStyle=C.dim; g.font="13px sans-serif";
+    g.fillText("Значения ФА примерные — сверяйте с вашей таблицей ФА",pad,y+8);
+    return c;
+  }
+  var shotCanvas=null;
+  document.getElementById("shotBtn").addEventListener("click",function(){
+    shotCanvas=buildShot();
+    document.getElementById("shotImg").src=shotCanvas.toDataURL("image/png");
+    document.getElementById("shotDlg").showModal();
+  });
+  function shotBlob(cb){ if(shotCanvas) shotCanvas.toBlob(cb,"image/png"); }
+  document.getElementById("shotSend").addEventListener("click",function(){
+    shotBlob(function(blob){
+      if(!blob) return;
+      var file=new File([blob],"recipe-fa.png",{type:"image/png"});
+      if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+        navigator.share({files:[file],title:"Рецепт ФА"}).catch(function(){});
+      }else{
+        var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="recipe-fa.png"; a.click();
+      }
+    });
+  });
+  document.getElementById("shotSave").addEventListener("click",function(){
+    shotBlob(function(blob){
+      if(!blob) return;
+      var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="recipe-fa.png"; a.click();
+    });
+  });
+  document.getElementById("refBtn").addEventListener("click",function(){
+    renderRefEditor(); document.getElementById("refDlg").showModal();
+  });
+
+  document.getElementById("helpBtn").addEventListener("click",function(){ document.getElementById("helpDlg").showModal(); });
+  document.getElementById("howBtn").addEventListener("click",function(){ document.getElementById("howDlg").showModal(); });
+  document.getElementById("checkBtn").addEventListener("click",function(){ location.reload(true); });
+
+  // Тема: по умолчанию — как в настройках телефона; кнопка переключает и запоминает
+  function saveMisc(){ try{ localStorage.setItem(MISC_KEY, JSON.stringify({dw:dishEl.value, pw:portionEl.value})); }catch(e){} }
+  var THEME_KEY="fa_theme";
+  function currentTheme(){
+    var s=null; try{ s=localStorage.getItem(THEME_KEY); }catch(e){}
+    if(s==="light"||s==="dark") return s;
+    return (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+  }
+  function applyTheme(){
+    var t=currentTheme();
+    document.documentElement.setAttribute("data-theme",t);
+    var btn=document.getElementById("themeBtn");
+    if(btn) btn.textContent=(t==="dark")?"☀️":"🌙";
+    var meta=document.querySelector('meta[name="theme-color"]');
+    if(meta) meta.setAttribute("content", t==="dark" ? "#0f1115" : "#f4f6f8");
+  }
+  document.getElementById("themeBtn").addEventListener("click",function(){
+    try{ localStorage.setItem(THEME_KEY, currentTheme()==="dark" ? "light" : "dark"); }catch(e){}
+    applyTheme();
+  });
+  applyTheme();
+
+  // Восстановление веса готового блюда и веса порции
+  try{
+    var misc=JSON.parse(localStorage.getItem(MISC_KEY));
+    if(misc && typeof misc==="object"){
+      if(misc.dw!==undefined && misc.dw!=="") dishEl.value=misc.dw;
+      if(misc.pw) portionEl.value=misc.pw;
+    }
+  }catch(e){}
+
+  // Справочник и подсказки заполняются сразу при открытии страницы
+  renderRefEditor();
+
+  // Баннер обновления: сравниваем версию кода с сохранённой
+  var VER="18";
+  try{
+    if(localStorage.getItem("fa_ver") && localStorage.getItem("fa_ver")!==VER){
+      document.getElementById("updateBanner").style.display="flex";
+    }
+    localStorage.setItem("fa_ver",VER);
+  }catch(e){}
+
+  renderAll();
+})();
 </script>
 </body>
 </html>
