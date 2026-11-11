@@ -11,12 +11,14 @@
     --text:#1b1d21; --dim:#5f6570; --accent:#2f6fd8; --green:#1e8e3e;
     --warn-bg:#fff6df; --warn-line:#e0a800; --warn-text:#7a5b00;
     --danger:#d93025;
+    --ref-std:#f8f0d2;
   }
   :root[data-theme="dark"]{
     --bg:#0f1115; --card:#1b1e24; --card2:#23262e; --line:#2c3038;
     --text:#e8eaed; --dim:#9aa0a6; --accent:#8ab4f8; --green:#5dd97c;
     --warn-bg:#2a2210; --warn-line:#e0a800; --warn-text:#f2c94c;
     --danger:#e57373;
+    --ref-std:rgba(224,168,0,.13);
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -89,11 +91,27 @@
 
   .refeditor .row{display:flex;gap:6px;align-items:center;margin-bottom:5px;}
   .refeditor .row button{background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem;padding:2px;}
+  .refeditor .row{border:1px solid transparent;border-radius:8px;padding:2px 4px;}
+  .refeditor .row.std{background:var(--ref-std);}
+  .refeditor .row.edited{border-color:var(--accent);}
+  .reflegend{font-size:.82rem;color:var(--dim);margin:6px 0 2px;}
+  .reflegend .lg-std{background:var(--ref-std);padding:1px 6px;border-radius:6px;}
+  .reflegend .lg-ed{border:1px solid var(--accent);padding:1px 6px;border-radius:6px;}
   #updateBanner{display:none;background:#1e293b;border:1px solid #3b82f6;
     border-radius:10px;padding:10px 14px;margin-bottom:12px;
     color:#bfdbfe;font-size:.9rem;align-items:center;justify-content:space-between;gap:10px;}
   #updateBanner button{background:#3b82f6;color:#fff;border:none;border-radius:8px;
     padding:8px 14px;font-size:.9rem;cursor:pointer;}
+  #saveRecipeBtn{width:100%;margin-top:8px;padding:12px;background:var(--card2);
+    border:1px solid var(--line);border-radius:10px;color:var(--text);
+    font-size:1rem;cursor:pointer;}
+  .recItem{display:flex;align-items:center;gap:8px;background:var(--card2);
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;}
+  .recInfo{flex:1;min-width:0;cursor:pointer;}
+  .recName{font-weight:600;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .recSub{color:var(--dim);font-size:.82rem;margin-top:2px;}
+  #recName{width:100%;padding:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:10px;color:var(--text);font-size:1.05rem;}
   .center{text-align:center;}
 </style>
 </head>
@@ -122,6 +140,7 @@
   <button id="resetWeights">Сбросить веса</button>
   <button id="clearAll">Очистить всё</button>
 </div>
+<button id="saveRecipeBtn">Сохранить рецепт</button>
 
 <div class="results">
   <div class="big" id="resPortion">ФА в порции (100 г): 0,00 мг</div>
@@ -131,22 +150,40 @@
 
 <div class="btnrow">
   <button id="shareBtn">Поделиться</button>
-  <button id="shotBtn">Скриншот рецепта</button>
+  <button id="recBtn">Рецепты</button>
 </div>
 <div class="btnrow">
   <button id="refBtn">Справочник</button>
-  <button id="helpBtn">Как пользоваться</button>
+  <button id="setBtn">Настройки</button>
 </div>
-<div class="btnrow">
-  <button id="howBtn">Как это работает</button>
-  <button id="checkBtn">Проверить обновления</button>
-</div>
+
+<dialog id="setDlg">
+  <h3>Настройки</h3>
+  <div class="btnrow">
+    <button id="helpBtn">Как пользоваться</button>
+    <button id="howBtn">Как это работает</button>
+  </div>
+  <div class="btnrow">
+    <button id="backupSave">Сохранить бэкап</button>
+    <button id="backupLoad">Загрузить бэкап</button>
+  </div>
+  <input type="file" id="backupFile" accept=".txt,text/plain" style="display:none;">
+  <div class="btnrow">
+    <button id="tgBtn">Группа в Telegram</button>
+    <button id="checkBtn">Проверить обновления</button>
+  </div>
+  <div class="btnrow">
+    <button id="jokeBtn" style="grid-column:1/3;">Не нажимать</button>
+  </div>
+  <div class="center"><button onclick="this.closest('dialog').close()">Закрыть</button></div>
+</dialog>
 
 <datalist id="refList"></datalist>
 
 <dialog id="refDlg">
   <h3>Справочник ФА (можно править)</h3>
   <p style="color:var(--dim);font-size:.85rem;">Значения примерные — правьте под вашу таблицу ФА. Изменения сохраняются автоматически.</p>
+  <p class="reflegend"><span class="lg-std">жёлтая строка — встроенный справочник</span> &nbsp; <span class="lg-ed">рамка — ваши правки</span></p>
   <div id="refEditor" class="refeditor"></div>
   <div class="btnrow">
     <button id="refAdd">+ Добавить продукт</button>
@@ -173,6 +210,12 @@
     <li>Калькулятор сразу покажет ФА в порции и на 100 г готового блюда.</li>
     <li>Данные сохраняются автоматически.</li>
   </ol>
+  <p>Кнопки «Как это работает», «Сохранить бэкап», «Загрузить бэкап», «Проверить обновления» и «Не нажимать» собраны в «Настройках» — в нижнем ряду главного экрана. Скриншот рецепта спрятан в окне «Поделиться».</p>
+  <h3>Сохранение рецептов</h3>
+  <p><b>Сохранить.</b> Наберите блюдо в таблице — продукты, ФА, сырые веса, вес готового блюда и порции — и нажмите «Сохранить рецепт» под таблицей. Введите название, например «Рагу овощное», и подтвердите. В рецепт записывается всё содержимое таблицы, а в списке рецептов появится строка с числом продуктов и ФА на 100 г на момент сохранения.</p>
+  <p><b>Загрузить.</b> Кнопка «Рецепты» в нижнем ряду открывает список сохранённых блюд. Нажатие по названию загружает рецепт в таблицу — <b>текущая таблица при этом перезаписывается без предупреждения</b>, поэтому несохранённый набор лучше сначала записать. Крестик справа удаляет рецепт (с подтверждением).</p>
+  <p><b>Изменения не попадают обратно в рецепт автоматически.</b> Рецепт — это заготовка, а таблица — рабочий стол: загрузили «Рагу», поменяли кабачку вес — рецепт остался как был. Чтобы обновить рецепт, нажмите «Сохранить рецепт» и введите то же название — приложение предложит заменить.</p>
+  <p><b>Резервная копия.</b> В окне «Рецепты» кнопка «Скачать резервную копию» сохраняет весь сборник файлом «рецепты-калькулятор.txt» — его можно переслать в чат или на почту. Кнопка «Загрузить из файла» принимает такой файл обратно: выбрали файл — сборник вернулся. При совпадении названий импортированный рецепт заменит старый. Всё вместе — рецепты и справочник — сохраняется одной кнопкой «Сохранить бэкап» в «Настройках» и возвращается кнопкой «Загрузить бэкап».</p>
   <h3>Ярлык на рабочий стол</h3>
   <p><b>Android (Chrome):</b> меню «⋮» → «Добавить на главный экран» (или «Установить приложение»). <b>iPhone (Safari):</b> кнопка «Поделиться» → «На экран „Домой“». После этого калькулятор открывается с иконки, как обычное приложение.</p>
   <h3>Где хранятся данные</h3>
@@ -183,7 +226,8 @@
     <li>удалить браузер или «почистить» телефон программами-оптимизаторами;</li>
     <li>открыть сайт в другом браузере или на другом устройстве — там будет свой пустой список.</li>
   </ul>
-  <p>Важные рецепты дублируйте кнопками «Поделиться» или «Скриншот рецепта» — в заметки, чат или на почту.</p>
+  <p><b>Рецепты и справочник хранятся там же</b> — все правила выше относятся и к ним. Если данных жалко, заранее жмите «Сохранить бэкап» в «Настройках»: файл можно переслать себе в чат или на почту, а затем вернуть кнопкой «Загрузить бэкап» — на этом же телефоне после чистки или на другом устройстве.</p>
+  <p>Важные рецепты дублируйте через «Поделиться» — файлом, системной отправкой или скриншотом — в заметки, чат или на почту.</p>
   <div class="center"><button onclick="this.closest('dialog').close()">Закрыть</button></div>
 </dialog>
 
@@ -204,9 +248,35 @@
   <p id="shareText" style="white-space:pre-wrap;font-size:.88rem;"></p>
   <p style="color:var(--warn-text);font-size:.82rem;">Значения ФА в справочнике примерные — перед отправкой сверьте с вашей таблицей ФА.</p>
   <div class="btnrow">
-    <button id="shareCopy">Скопировать</button>
+    <button id="shareDl">Скачать файл</button>
     <button id="shareSend">Отправить</button>
-    <button id="shareClose">Закрыть</button>
+  </div>
+  <div class="btnrow">
+    <button id="shareShot" style="grid-column:1/3;">Скриншот рецепта</button>
+  </div>
+  <div class="center"><button onclick="this.closest('dialog').close()">Закрыть</button></div>
+</dialog>
+
+<dialog id="recDlg">
+  <h3>Мои рецепты</h3>
+  <p style="color:var(--dim);font-size:.85rem;">Нажмите на название — рецепт загрузится в таблицу, при этом текущая таблица будет перезаписана. Крестик удаляет рецепт.</p>
+  <div id="recList"></div>
+  <p id="recEmpty" style="color:var(--dim);font-size:.9rem;display:none;">Пока пусто. Наберите блюдо в таблице и нажмите «Сохранить рецепт».</p>
+  <div class="btnrow">
+    <button id="recExport">Скачать резервную копию</button>
+    <button id="recImport">Загрузить из файла</button>
+  </div>
+  <input type="file" id="recFile" accept=".txt,text/plain" style="display:none;">
+  <div class="center"><button onclick="this.closest('dialog').close()">Закрыть</button></div>
+</dialog>
+
+<dialog id="saveDlg">
+  <h3>Сохранить рецепт</h3>
+  <p style="color:var(--dim);font-size:.85rem;">Введите название, например «Рагу овощное». Если рецепт с таким именем уже есть — предложим заменить его.</p>
+  <input id="recName" placeholder="Название блюда">
+  <div class="btnrow">
+    <button id="recSaveOk">Сохранить</button>
+    <button id="recSaveCancel">Закрыть</button>
   </div>
 </dialog>
 
@@ -349,10 +419,18 @@
 
   // Справочник
   var refEditor=document.getElementById("refEditor");
+  function refKind(p){
+    for(var i=0;i<DEFAULT_REF.length;i++){
+      if(DEFAULT_REF[i].n.toLowerCase()===String(p.n||"").toLowerCase()){
+        return num(p.v)===num(DEFAULT_REF[i].v) ? "std" : "edited";
+      }
+    }
+    return "edited";
+  }
   function renderRefEditor(){
     refEditor.innerHTML="";
     ref.forEach(function(p,i){
-      var row=document.createElement("div"); row.className="row";
+      var row=document.createElement("div"); row.className="row "+refKind(p);
       row.innerHTML='<input class="n" value=""><input class="v" inputmode="decimal" value=""><button title="Удалить">✕</button>';
       row.querySelector(".n").value=p.n; row.querySelector(".v").value=p.v;
       row.querySelector(".n").addEventListener("input",function(){ p.n=this.value; saveRef(); updateDatalist(); });
@@ -370,6 +448,211 @@
   document.getElementById("refAdd").addEventListener("click",function(){ ref.push({n:"",v:0}); saveRef(); renderRefEditor(); });
   document.getElementById("refReset").addEventListener("click",function(){ ref=DEFAULT_REF.map(function(p){return {n:p.n,v:p.v};}); saveRef(); renderRefEditor(); });
 
+  // ===== Мои рецепты =====
+  var REC_KEY="fa_recipes_v1";
+  var recListEl=document.getElementById("recList");
+  function loadRec(){
+    try{ var s=JSON.parse(localStorage.getItem(REC_KEY)); if(Array.isArray(s)) return s; }catch(e){}
+    return [];
+  }
+  function saveRec(){ try{ localStorage.setItem(REC_KEY, JSON.stringify(rec)); }catch(e){} }
+  var rec=loadRec();
+
+  function collectRecipe(){
+    var items=[];
+    rows.forEach(function(r){
+      if((r.n&&r.n.trim())||num(r.w)>0) items.push({n:String(r.n||""),f:String(r.f||""),w:String(r.w||"")});
+    });
+    var dw=num(dishEl.value), pw=num(portionEl.value);
+    var totalFa=0; items.forEach(function(r){ totalFa+=num(r.f)*num(r.w)/100; });
+    var fa100=dw>0 ? totalFa/dw*100 : null;
+    return {dw:(dw>0?dw:null), pw:(pw>0?pw:null), items:items, fa100:fa100};
+  }
+  function pluralProd(n){
+    var a=Math.abs(n)%100, b=a%10;
+    if(a>10&&a<20) return "продуктов";
+    if(b>1&&b<5) return "продукта";
+    if(b===1) return "продукт";
+    return "продуктов";
+  }
+  function renderRecList(){
+    recListEl.innerHTML="";
+    document.getElementById("recEmpty").style.display=rec.length?"none":"block";
+    rec.forEach(function(rc,i){
+      var d=document.createElement("div"); d.className="recItem";
+      var sub=rc.items.length+" "+pluralProd(rc.items.length)+" · "+
+        ((rc.fa100!==null&&rc.fa100!==undefined)?fmt2(rc.fa100)+" мг/100 г":"ФА на 100 г не посчитан");
+      d.innerHTML='<div class="recInfo"><div class="recName"></div><div class="recSub"></div></div>'+
+        '<button class="del" title="Удалить рецепт">✕</button>';
+      d.querySelector(".recName").textContent=rc.name;
+      d.querySelector(".recSub").textContent=sub;
+      d.querySelector(".recInfo").addEventListener("click",function(){ loadRecipe(rc); });
+      d.querySelector(".del").addEventListener("click",function(ev){
+        ev.stopPropagation();
+        if(confirm("Удалить рецепт «"+rc.name+"»?")){ rec.splice(i,1); saveRec(); renderRecList(); }
+      });
+      recListEl.appendChild(d);
+    });
+  }
+  function loadRecipe(rc){
+    rows=rc.items.map(function(r){ return {n:String(r.n||""),f:String(r.f||""),w:String(r.w||"")}; });
+    dishEl.value=(rc.dw!==null&&rc.dw!==undefined)?String(rc.dw):"";
+    portionEl.value=rc.pw?String(rc.pw):"";
+    saveRows(); saveMisc(); renderAll();
+    document.getElementById("recDlg").close();
+  }
+  var saveDlgEl=document.getElementById("saveDlg");
+  document.getElementById("saveRecipeBtn").addEventListener("click",function(){
+    if(!collectRecipe().items.length){ alert("Таблица пуста — нечего сохранять."); return; }
+    document.getElementById("recName").value="";
+    saveDlgEl.showModal();
+  });
+  document.getElementById("recSaveOk").addEventListener("click",function(){
+    var name=document.getElementById("recName").value.trim();
+    if(!name){ alert("Введите название рецепта."); return; }
+    var draft=collectRecipe(), idx=-1;
+    for(var i=0;i<rec.length;i++){ if(String(rec[i].name).toLowerCase()===name.toLowerCase()) idx=i; }
+    if(idx>=0 && !confirm("Рецепт «"+name+"» уже сохранён. Заменить?")) return;
+    var entry={name:name, dw:draft.dw, pw:draft.pw, fa100:draft.fa100, items:draft.items};
+    if(idx>=0) rec[idx]=entry; else rec.unshift(entry);
+    saveRec(); saveDlgEl.close();
+  });
+  document.getElementById("recSaveCancel").addEventListener("click",function(){ saveDlgEl.close(); });
+  document.getElementById("recBtn").addEventListener("click",function(){
+    renderRecList();
+    document.getElementById("recDlg").showModal();
+  });
+
+  // Экспорт и импорт сборника рецептов
+  function buildExport(){
+    var s="=== Рецепты ФА ===\n";
+    rec.forEach(function(rc){
+      s+="## "+rc.name+"\n";
+      s+="Блюдо: "+(rc.dw?rc.dw:"—")+" г | Порция: "+(rc.pw?rc.pw:"—")+" г\n";
+      rc.items.forEach(function(r){ s+="- "+(r.n||"—")+" | ФА "+(r.f||"—")+" | "+(r.w||"—")+" г\n"; });
+      s+="ФА на 100 г: "+(rc.fa100!==null&&rc.fa100!==undefined?fmt2(rc.fa100):"—")+" мг\n\n";
+    });
+    return s.trim();
+  }
+  // --- Файлы вместо буфера обмена: скачивание и системная отправка ---
+  function downloadFile(name, text){
+    var blob=new Blob([text],{type:"text/plain;charset=utf-8"});
+    var a=document.createElement("a");
+    a.href=URL.createObjectURL(blob); a.download=name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(a.href); },500);
+  }
+  function sendOrDownload(name, text){
+    try{
+      var blob=new Blob([text],{type:"text/plain;charset=utf-8"});
+      var file=new File([blob],name,{type:"text/plain"});
+      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({files:[file],title:name.replace(/\.txt$/,"")}).catch(function(){ downloadFile(name,text); });
+        return;
+      }
+    }catch(e){}
+    downloadFile(name,text);
+  }
+  document.getElementById("recExport").addEventListener("click",function(){
+    if(!rec.length){ alert("Список рецептов пуст."); return; }
+    sendOrDownload("рецепты-калькулятор.txt", buildExport());
+  });
+  document.getElementById("recImport").addEventListener("click",function(){
+    document.getElementById("recFile").click();
+  });
+  document.getElementById("recFile").addEventListener("change",function(){
+    var f=this.files&&this.files[0]; this.value="";
+    if(!f) return;
+    var rd=new FileReader();
+    rd.onload=function(){
+      var parsed=parseRecipes(String(rd.result||""));
+      if(!parsed.length){ alert("В файле не нашлось ни одного рецепта."); return; }
+      var added=0, replaced=0;
+      parsed.forEach(function(p){
+        var idx=-1;
+        for(var i=0;i<rec.length;i++){ if(String(rec[i].name).toLowerCase()===p.name.toLowerCase()) idx=i; }
+        if(idx>=0){ rec[idx]=p; replaced++; } else { rec.unshift(p); added++; }
+      });
+      saveRec(); renderRecList();
+      alert("Импортировано: новых "+added+", заменено "+replaced+".");
+    };
+    rd.readAsText(f);
+  });
+  function parseRecipes(text){
+    var out=[], cur=null;
+    String(text||"").split(/\r?\n/).forEach(function(line){
+      line=line.trim();
+      if(!line || line.indexOf("===")===0) return;
+      if(line.indexOf("##")===0){
+        var nm=line.replace(/^#+\s*/,"").trim();
+        if(nm){ cur={name:nm,dw:null,pw:null,fa100:null,items:[]}; out.push(cur); }
+        return;
+      }
+      if(!cur) return;
+      if(line.indexOf("Блюдо:")===0){
+        var m=line.match(/Блюдо:\s*([\d.,]+)/), p=line.match(/Порция:\s*([\d.,]+)/);
+        if(m) cur.dw=parseFloat(m[1].replace(",","."));
+        if(p) cur.pw=parseFloat(p[1].replace(",","."));
+        return;
+      }
+      if(line.indexOf("- ")===0){
+        var m2=line.match(/^-\s*(.+?)\s*\|\s*ФА\s*([\d.,]+)?\s*\|\s*([\d.,]+)?/i);
+        if(m2) cur.items.push({n:m2[1].trim(), f:m2[2]?m2[2].replace(",","."):"", w:m2[3]?m2[3].replace(",","."):""});
+        return;
+      }
+      var m3=line.match(/ФА на 100 г:\s*([\d.,]+)/);
+      if(m3 && cur.fa100===null) cur.fa100=parseFloat(m3[1].replace(",","."));
+    });
+    out=out.filter(function(r){ return r.items.length; });
+    return out;
+  }
+
+  // --- Единый бэкап: рецепты + справочник в одном файле ---
+  function buildBackup(){
+    var s="=== Бэкап калькулятора ФА ===\n\n";
+    if(rec.length){ s+=buildExport().replace(/^=== Рецепты ФА ===\n/,"")+"\n"; }
+    else{ s+="(пусто)\n"; }
+    s+="\n=== Справочник ФА ===\n";
+    ref.forEach(function(p){ s+="- "+p.n+" | "+p.v+"\n"; });
+    return s;
+  }
+  function parseRefBlock(text){
+    var out=[], m;
+    String(text||"").split(/\r?\n/).forEach(function(line){
+      line=line.trim();
+      m=line.match(/^-\s*(.+?)\s*\|\s*([\d.,]+)\s*$/);
+      if(m && m[1]) out.push({n:m[1].trim(), v:m[2].replace(",",".")});
+    });
+    return out;
+  }
+  document.getElementById("backupSave").addEventListener("click",function(){
+    sendOrDownload("бэкап-калькулятор.txt", buildBackup());
+  });
+  document.getElementById("backupLoad").addEventListener("click",function(){
+    document.getElementById("backupFile").click();
+  });
+  document.getElementById("backupFile").addEventListener("change",function(){
+    var f=this.files&&this.files[0]; this.value="";
+    if(!f) return;
+    var rd=new FileReader();
+    rd.onload=function(){
+      var t=String(rd.result||""), idx=t.indexOf("=== Справочник ФА ===");
+      var recPart=idx>=0?t.slice(0,idx):t, refPart=idx>=0?t.slice(idx):"";
+      var newRec=parseRecipes(recPart), newRef=parseRefBlock(refPart);
+      if(!newRec.length && !newRef.length){ alert("В файле не нашлось ни рецептов, ни справочника."); return; }
+      var addedR=0, repR=0;
+      newRec.forEach(function(p){
+        var i2=-1;
+        for(var i=0;i<rec.length;i++){ if(String(rec[i].name).toLowerCase()===p.name.toLowerCase()) i2=i; }
+        if(i2>=0){ rec[i2]=p; repR++; } else { rec.unshift(p); addedR++; }
+      });
+      if(newRef.length) ref=newRef;
+      saveRec(); saveRef(); renderRecList(); renderRefEditor();
+      alert("Бэкап восстановлен: рецептов новых "+addedR+", заменено "+repR+"; строк справочника "+newRef.length+".");
+    };
+    rd.readAsText(f);
+  });
+
   // Поделиться
   var shareDlg=document.getElementById("shareDlg"), shareText=document.getElementById("shareText");
   function buildShare(){
@@ -384,25 +667,18 @@
   document.getElementById("shareBtn").addEventListener("click",function(){
     shareText.textContent=buildShare(); shareDlg.showModal();
   });
-  function copyTextFallback(t){
-    var ta=document.createElement("textarea");
-    ta.value=t; ta.style.position="fixed"; ta.style.opacity="0";
-    document.body.appendChild(ta); ta.focus(); ta.select();
-    try{ document.execCommand("copy"); }catch(e){}
-    document.body.removeChild(ta);
-  }
-  document.getElementById("shareCopy").addEventListener("click",function(){
-    var txt=buildShare();
-    try{
-      navigator.clipboard.writeText(txt).then(function(){ alert("Скопировано"); },function(){ copyTextFallback(txt); alert("Скопировано"); });
-    }catch(e){ copyTextFallback(txt); alert("Скопировано"); }
+  document.getElementById("shareDl").addEventListener("click",function(){
+    sendOrDownload("рецепт-калькулятор.txt", buildShare());
+  });
+  document.getElementById("shareShot").addEventListener("click",function(){
+    shotCanvas=buildShot();
+    document.getElementById("shotImg").src=shotCanvas.toDataURL("image/png");
+    document.getElementById("shotDlg").showModal();
   });
   document.getElementById("shareSend").addEventListener("click",function(){
     if(navigator.share) navigator.share({text:buildShare()}).catch(function(){});
-    else{ copyTextFallback(buildShare()); alert("Скопировано — вставьте в чат"); }
+    else downloadFile("рецепт-калькулятор.txt", buildShare());
   });
-  document.getElementById("shareClose").addEventListener("click",function(){ shareDlg.close(); });
-  shareDlg.addEventListener("click",function(e){ if(e.target===shareDlg) shareDlg.close(); });
 
   // Скриншот рецепта: рисуем красивую карточку в PNG, цвета — из текущей темы
   function themeCol(v,f){ var s=getComputedStyle(document.documentElement).getPropertyValue(v).trim(); return s||f; }
@@ -486,11 +762,6 @@
     return c;
   }
   var shotCanvas=null;
-  document.getElementById("shotBtn").addEventListener("click",function(){
-    shotCanvas=buildShot();
-    document.getElementById("shotImg").src=shotCanvas.toDataURL("image/png");
-    document.getElementById("shotDlg").showModal();
-  });
   function shotBlob(cb){ if(shotCanvas) shotCanvas.toBlob(cb,"image/png"); }
   document.getElementById("shotSend").addEventListener("click",function(){
     shotBlob(function(blob){
@@ -513,9 +784,24 @@
     renderRefEditor(); document.getElementById("refDlg").showModal();
   });
 
+  document.getElementById("setBtn").addEventListener("click",function(){ document.getElementById("setDlg").showModal(); });
   document.getElementById("helpBtn").addEventListener("click",function(){ document.getElementById("helpDlg").showModal(); });
   document.getElementById("howBtn").addEventListener("click",function(){ document.getElementById("howDlg").showModal(); });
   document.getElementById("checkBtn").addEventListener("click",function(){ location.reload(true); });
+  document.getElementById("tgBtn").addEventListener("click",function(){ window.open("https://t.me/+rZOVvdDEI8hjOTUy","_blank"); });
+
+  // Шуточная кнопка: честно признаётся, что ничего не делает
+  var jokePresses=0;
+  document.getElementById("jokeBtn").addEventListener("click",function(){
+    jokePresses++;
+    if(jokePresses===1){
+      alert("Раз уж нажали — докладываю честно: кнопка пока не задействована. Зато я предупреждал 🙂 Когда функционал вырастет, здесь появится что-то действительно полезное. А пока главный приз — хорошее настроение.");
+    } else if(jokePresses<4){
+      alert("Вы нажали уже "+jokePresses+" раз(а). Смелость засчитана, кнопка всё ещё не задействована. Может, попробуете что-нибудь другое? 🙂");
+    } else {
+      alert("Нажатий: "+jokePresses+". Это уже не любопытство, а упорство! Кнопка всё так же ничего не делает — но я в вас уверен.");
+    }
+  });
 
   // Тема: по умолчанию — как в настройках телефона; кнопка переключает и запоминает
   function saveMisc(){ try{ localStorage.setItem(MISC_KEY, JSON.stringify({dw:dishEl.value, pw:portionEl.value})); }catch(e){} }
@@ -552,7 +838,7 @@
   renderRefEditor();
 
   // Баннер обновления: сравниваем версию кода с сохранённой
-  var VER="18";
+  var VER="24";
   try{
     if(localStorage.getItem("fa_ver") && localStorage.getItem("fa_ver")!==VER){
       document.getElementById("updateBanner").style.display="flex";
